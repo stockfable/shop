@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shop Products - STOCK FABLE</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        html, body { max-width: 100%; overflow-x: hidden; }
+        body {
+            background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 40%, #fbbf24 100%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ★ Navbar ★ */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 6%;
+            background: rgba(10, 22, 40, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+            position: sticky; top: 0; z-index: 100;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .nav-logo {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 800; font-size: 18px; color: #fff;
+            text-decoration: none; letter-spacing: 0.5px;
+        }
+        .nav-logo .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 8px; display: flex; justify-content: center; align-items: center;
+            color: #0a1628; font-size: 16px;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+        }
+        .nav-links { display: flex; gap: 24px; flex-wrap: wrap; }
+        .nav-links a {
+            text-decoration: none; color: #cbd5e1; font-size: 14px;
+            font-weight: 500; transition: 0.2s; padding: 6px 0; position: relative;
+        }
+        .nav-links a:hover { color: #fbbf24; }
+        .nav-links a.active { color: #fbbf24; font-weight: 700; }
+        .nav-links a.active::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+            height: 2px; background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 2px; box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+        }
+        .nav-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .nav-text-btn {
+            color: #ccc; text-decoration: none; font-size: 13px; font-weight: 600;
+            padding: 6px 12px; border-radius: 6px; transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-text-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+
+        /* ★ Hero ★ */
+        .hero-section {
+            padding: 60px 6% 30px; max-width: 1200px; margin: 0 auto; text-align: center;
+        }
+        .hero-title {
+            font-size: 42px; font-weight: 800; color: #fff;
+            line-height: 1.15; margin-bottom: 18px; letter-spacing: -1px;
+        }
+        .hero-title .highlight {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-subtitle {
+            font-size: 16px; color: #cbd5e1; margin-bottom: 30px;
+            max-width: 600px; margin-left: auto; margin-right: auto;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24; padding: 8px 18px; border-radius: 30px;
+            font-size: 13px; font-weight: 600; margin-bottom: 20px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        /* ★ Category Tabs ★ */
+        .category-tabs {
+            display: flex; gap: 10px; padding: 20px 6% 30px;
+            max-width: 1200px; margin: 0 auto;
+            overflow-x: auto; scrollbar-width: none;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .cat-tab {
+            flex: 0 0 auto; padding: 12px 22px; border-radius: 22px;
+            background: rgba(30, 34, 43, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #cbd5e1; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: 0.3s; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .cat-tab:hover { border-color: rgba(251, 191, 36, 0.5); color: #fbbf24; transform: translateY(-2px); }
+        .cat-tab.active {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0a1628; border-color: transparent;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+        }
+        .cat-tab i { font-size: 15px; }
+        .cat-tab.product-tab {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #0a1628; border-color: transparent;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+            font-weight: 700; margin-right: 10px;
+        }
+
+        /* ★★★ Featured Product Section ★★★ */
+        .products-section-wrapper {
+            max-width: 1200px;
+            margin: 0 auto 60px;
+            padding: 0 6%;
+        }
+        .products-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .products-section-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .products-section-header h2 i { color: #fbbf24; }
+
+        .featured-product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .featured-product-card {
+            background: #1a1f2e;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.35s ease;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .featured-product-card:hover {
+            transform: translateY(-6px);
+            border-color: #fbbf24;
+            box-shadow: 0 20px 45px -10px rgba(251, 191, 36, 0.3);
+        }
+
+        /* ★ প্রোডাক্ট ছবি ★ */
+        .featured-product-image {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        .featured-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            display: block;
+        }
+        .featured-product-card:hover .featured-product-image img {
+            transform: scale(1.08);
+        }
+        .discount-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+            z-index: 2;
+        }
+
+        /* ★ প্রোডাক্ট তথ্য ★ */
+        .featured-product-info {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* ★ Daraz ব্র্যান্ড ট্যাগ ★ */
+        .brand-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #1e40af;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+            align-self: flex-start;
+        }
+
+        /* ★ প্রোডাক্টের নাম ★ */
+        .product-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f3f4f6;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 42px;
+        }
+
+        /* ★ রেটিং ★ */
+        .product-rating {
+            font-size: 12px;
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .product-rating span {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* ★ দাম ★ */
+        .product-prices {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+        .current-price {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fbbf24;
+        }
+        .old-price {
+            font-size: 14px;
+            color: #64748b;
+            text-decoration: line-through;
+        }
+
+        /* ★ এখনই কিনুন বাটন ★ */
+        .buy-now-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            padding: 13px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            margin-top: auto;
+        }
+        .buy-now-btn:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        /* ★ Footer ★ */
+        .main-footer {
+            text-align: center; padding: 25px;
+            background: #0a1628; color: #94a3b8; font-size: 13px;
+            border-top: 1px solid rgba(251, 191, 36, 0.15);
+        }
+        .main-footer strong { color: #fbbf24; }
+
+        /* ★ Responsive ★ */
+        @media (max-width: 900px) {
+            .hero-title { font-size: 30px; }
+        }
+        @media (max-width: 600px) {
+            .hero-title { font-size: 24px; }
+            .navbar { padding: 14px 5%; flex-direction: column; gap: 12px; }
+            .nav-links { justify-content: center; width: 100%; gap: 14px; }
+            .nav-links a { font-size: 12px; }
+            .hero-section { padding: 40px 5% 20px; }
+            .category-tabs { padding: 15px 5% 20px; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; }
+            .cat-tab { padding: 10px 18px; font-size: 13px; }
+            .products-section-wrapper { padding: 0 5%; margin-bottom: 40px; }
+            .featured-product-grid { grid-template-columns: 1fr; }
+            .product-title { font-size: 14px; }
+            .current-price { font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ★ Navbar ★ -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-icon"><i class="fas fa-shopping-bag"></i></div>
+            STOCK FABLE
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="shop.html" class="active">Shop</a>
+            <a href="news.html">News</a>
+        </div>
+        <div class="nav-right">
+            <a href="https://www.daraz.com.bd/" target="_blank" rel="noopener sponsored" class="nav-text-btn">
+                <i class="fas fa-external-link-alt"></i> Daraz
+            </a>
+        </div>
+    </nav>
+
+    <!-- ★ Hero Section ★ -->
+    <section class="hero-section">
+        <div class="hero-badge">
+            <i class="fas fa-tags"></i> Sponsored Products
+        </div>
+        <h1 class="hero-title">Shop Everything on <span class="highlight">Daraz</span></h1>
+        <p class="hero-subtitle">Discover the best deals on smartphones, laptops, gadgets, fashion, home essentials and more — all in one place.</p>
+    </section>
+
+    <!-- ★ Category Tabs ★ -->
+    <div class="category-tabs">
+        <a href="product.html" class="cat-tab product-tab">
+            <i class="fas fa-box"></i> Product
+        </a>
+        <a href="https://www.daraz.com.bd/smartphones/" target="_blank" rel="noopener sponsored" class="cat-tab active">
+            <i class="fas fa-mobile-alt"></i> Mobiles
+        </a>
+        <a href="https://www.daraz.com.bd/laptops/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-laptop"></i> Laptops
+        </a>
+        <a href="https://www.daraz.com.bd/headphones-headsets/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-headphones"></i> Audio
+        </a>
+        <a href="https://www.daraz.com.bd/fashion/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-tshirt"></i> Fashion
+        </a>
+        <a href="https://www.daraz.com.bd/home-living/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-home"></i> Home
+        </a>
+        <a href="https://www.daraz.com.bd/health-beauty/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-spa"></i> Beauty
+        </a>
+        <a href="https://www.daraz.com.bd/gaming/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-gamepad"></i> Gaming
+        </a>
+        <a href="https://www.daraz.com.bd/cameras/" target="_blank" rel="noopener sponsored" class="cat-tab">
+            <i class="fas fa-camera"></i> Cameras
+        </a>
+    </div>
+
+    <!-- ★★★ Featured Product Card ★★★ -->
+    <section class="products-section-wrapper">
+        <div class="products-section-header">
+            <h2><i class="fas fa-fire"></i> Featured Products</h2>
+        </div>
+        
+        <div class="featured-product-grid">
+            
+            <!-- ★★★ প্রোডাক্ট কার্ড ★★★ -->
+            <div class="featured-product-card">
+                <div class="featured-product-image">
+                    <span class="discount-badge">-29%</span>
+                    <!-- ★★ প্রোডাক্টের আসল ছবি এখানে ★★ -->
+                    <img src="https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=600&q=80" 
+                         alt="Tresemme Shampoo Keratin Smooth 580ml">
+                </div>
+                
+                <div class="featured-product-info">
+                    <div class="brand-tag">
+                        <i class="fas fa-shopping-bag"></i> Daraz
+                    </div>
+                    
+                    <h3 class="product-title">Tresemme Shampoo Keratin Smooth 580ml</h3>
+                    
+                    <div class="product-rating">
+                        ⭐ 4.7 <span>(3957 ratings)</span>
+                    </div>
+                    
+                    <div class="product-prices">
+                        <span class="current-price">৳607</span>
+                        <span class="old-price">৳850</span>
+                    </div>
+                    
+                    <!-- ★★ আপনার নতুন অ্যাফিলিয়েট লিংক ★★ -->
+                    <a href="https://s.daraz.com.bd/s.Ycaj9?cc" 
+                       target="_blank" 
+                       rel="noopener sponsored" 
+                       class="buy-now-btn">
+                        <i class="fas fa-shopping-cart"></i> এখনই কিনুন
+                    </a>
+                </div>
+            </div>
+            
+            <!-- ★★★ আরও প্রোডাক্ট যোগ করতে চাইলে এই ব্লক কপি করুন ★★★ -->
+            
+        </div>
+    </section>
+
+    <!-- ★ Footer ★ -->
+    <footer class="main-footer">
+        <p>© 2026 <strong>STOCK FABLE</strong>. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
