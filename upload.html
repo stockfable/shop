@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Uploader (Firestore only)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; margin: 0; padding: 15px; display: flex; justify-content: center; }
+  .wrap { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+  .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+  h2 { margin: 0 0 15px; text-align: center; color: #333; }
+  h3 { margin: 0 0 10px; font-size: 16px; color: #333; }
+  .drop { border: 2px dashed #007bff; padding: 18px; border-radius: 8px; text-align: center; background: #f8f9fa; margin-bottom: 12px; }
+  input[type=file] { width: 100%; }
+  button { padding: 12px; border: 0; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: #fff; background: #28a745; }
+  #uploadBtn { width: 100%; }
+  button:disabled { background: #bbb; cursor: not-allowed; }
+  .bar { height: 8px; background: #e5e5e5; border-radius: 4px; overflow: hidden; margin-top: 12px; display: none; }
+  .bar div { height: 100%; width: 0; background: #28a745; transition: width .2s; }
+  .status { margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; display: none; }
+  .ok { display: block; background: #d4edda; color: #155724; }
+  .err { display: block; background: #f8d7da; color: #721c24; }
+  .load { display: block; background: #fff3cd; color: #856404; }
+  .item { padding: 10px 0; border-bottom: 1px solid #eee; }
+  .item:last-child { border-bottom: 0; }
+  .item strong { display: block; font-size: 14px; word-break: break-all; }
+  .item small { color: #888; }
+  .row { display: flex; gap: 8px; margin-top: 8px; }
+  .play { flex: 1; background: #007bff; padding: 8px; font-size: 14px; }
+  .del { background: #dc3545; padding: 8px 12px; font-size: 14px; }
+  audio { width: 100%; height: 36px; margin-top: 8px; }
+  .empty { color: #888; text-align: center; font-size: 14px; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h2>🎤 অডিও আপলোড</h2>
+    <div class="drop">
+      <input type="file" id="audioFile" accept="audio/*" multiple>
+      <p style="font-size:12px;color:#666;margin:8px 0 0">একসাথে একাধিক অডিও সিলেক্ট করতে পারবেন</p>
+    </div>
+    <button id="uploadBtn">আপলোড করুন</button>
+    <div class="bar" id="bar"><div id="barFill"></div></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>সেভ করা অডিও</h3>
+    <div id="list"><div class="empty">লোড হচ্ছে...</div></div>
+  </div>
+</div>
+
+<script>
+  // ⚠️ apiKey আপনার Firebase Config থেকে কপি করে বসান
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "audio-7a8a9.firebaseapp.com",
+    projectId: "audio-7a8a9",
+    storageBucket: "audio-7a8a9.firebasestorage.app",
+    messagingSenderId: "40345301273",
+    appId: "1:40345301273:web:1475a38c652fe0749e9588"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const CHUNK_SIZE = 900 * 1024;           // প্রতি টুকরা ~900KB (Firestore limit 1MB)
+  const MAX_FILE_MB = 25;                  // এর বেশি বড় ফাইল নেবে না
+
+  const fileInput = document.getElementById('audioFile');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const statusEl = document.getElementById('status');
+  const bar = document.getElementById('bar');
+  const barFill = document.getElementById('barFill');
+  const listEl = document.getElementById('list');
+
+  function show(msg, type) { statusEl.className = 'status ' + type; statusEl.innerHTML = msg; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function mb(n) { return (n / 1048576).toFixed(2) + ' MB'; }
+
+  // ফাইল টুকরা করে Firestore-এ সেভ
+  async function uploadOne(file, onProgress) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const total = Math.ceil(bytes.length / CHUNK_SIZE);
+    const docRef = db.collection('recordings').doc();
+
+    try {
+      for (let i = 0; i < total; i++) {
+        const part = bytes.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        await docRef.collection('chunks').doc(String(i).padStart(5, '0')).set({
+          index: i,
+          data: firebase.firestore.Blob.fromUint8Array(part)
+        });
+        onProgress((i + 1) / total);
+      }
+      // সব টুকরা সেভ হওয়ার পর মূল ডকুমেন্ট (তাহলে অর্ধেক ফাইল লিস্টে আসবে না)
+      await docRef.set({
+        filename: file.name,
+        mime: file.type || 'audio/wav',
+        size: file.size,
+        chunkCount: total,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      await deleteChunks(docRef).catch(() => {});
+      throw e;
+    }
+  }
+
+  async function deleteChunks(docRef) {
+    const snap = await docRef.collection('chunks').get();
+    for (const d of snap.docs) await d.ref.delete();
+  }
+
+  uploadBtn.addEventListener('click', async () => {
+    const files = Array.from(fileInput.files);
+    if (!files.length) { show('❌ আগে অডিও ফাইল সিলেক্ট করুন', 'err'); return; }
+
+    uploadBtn.disabled = true;
+    bar.style.display = 'block';
+    let ok = 0, errors = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (f.size > MAX_FILE_MB * 1048576) {
+        errors.push(esc(f.name) + ': ফাইল অনেক বড় (' + mb(f.size) + ')');
+        continue;
+      }
+      show(`⏳ আপলোড হচ্ছে (${i + 1}/${files.length}): ${esc(f.name)} (${mb(f.size)})`, 'load');
+      barFill.style.width = '0%';
+      try {
+        await uploadOne(f, p => barFill.style.width = Math.round(p * 100) + '%');
+        ok++;
+      } catch (e) {
+        console.error(e);
+        errors.push(esc(f.name) + ': ' + esc(e.code || e.message));
+      }
+    }
+
+    uploadBtn.disabled = false;
+    fileInput.value = '';
+    bar.style.display = 'none';
+
+    if (!errors.length) show(`✅ ${ok} টি অডিও Firestore-এ সেভ হয়েছে`, 'ok');
+    else show(`⚠️ সফল: ${ok}, ব্যর্থ: ${errors.length}<br><small>${errors.join('<br>')}</small>`, 'err');
+  });
+
+  // প্লে করার সময় টুকরাগুলো জোড়া লাগিয়ে অডিও বানানো
+  const urlCache = {};
+  async function loadAudio(id, mime) {
+    if (urlCache[id]) return urlCache[id];
+    const snap = await db.collection('recordings').doc(id).collection('chunks').orderBy('index').get();
+    const parts = snap.docs.map(d => d.data().data.toUint8Array());
+    const url = URL.createObjectURL(new Blob(parts, { type: mime }));
+    urlCache[id] = url;
+    return url;
+  }
+
+  listEl.addEventListener('click', async (e) => {
+    const playBtn = e.target.closest('.play');
+    const delBtn = e.target.closest('.del');
+    if (playBtn) {
+      const item = playBtn.closest('.item');
+      const holder = item.querySelector('.player');
+      playBtn.disabled = true;
+      playBtn.textContent = 'লোড হচ্ছে...';
+      try {
+        const url = await loadAudio(item.dataset.id, item.dataset.mime);
+        holder.innerHTML = `<audio controls autoplay src="${url}"></audio>`;
+        playBtn.style.display = 'none';
+      } catch (err) {
+        console.error(err);
+        playBtn.disabled = false;
+        playBtn.textContent = '▶ আবার চেষ্টা করুন';
+        alert('লোড হয়নি: ' + (err.code || err.message));
+      }
+    }
+    if (delBtn) {
+      const item = delBtn.closest('.item');
+      if (!confirm('এই অডিও মুছে ফেলবেন?')) return;
+      try {
+        const ref = db.collection('recordings').doc(item.dataset.id);
+        await deleteChunks(ref);
+        await ref.delete();
+      } catch (err) { alert('মুছতে পারেনি: ' + (err.code || err.message)); }
+    }
+  });
+
+  // লাইভ লিস্ট (শুধু ছোট ডকুমেন্ট পড়ে, অডিও ডাটা না)
+  db.collection('recordings').onSnapshot(snap => {
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    items.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
+
+    if (!items.length) { listEl.innerHTML = '<div class="empty">এখনো কোনো অডিও নেই</div>'; return; }
+
+    listEl.innerHTML = items.map(d => `
+      <div class="item" data-id="${esc(d.id)}" data-mime="${esc(d.mime || 'audio/wav')}">
+        <strong>${esc(d.filename || 'audio')}</strong>
+        <small>${d.size ? mb(d.size) : 'পুরনো/ভাঙা এন্ট্রি'}</small>
+        <div class="player"></div>
+        <div class="row">
+          ${d.chunkCount ? '<button class="play">▶ প্লে করুন</button>' : ''}
+          <button class="del">🗑</button>
+        </div>
+      </div>`).join('');
+  }, err => {
+    console.error(err);
+    listEl.innerHTML = '<div class="empty">লোড হয়নি: ' + esc(err.code || err.message) + '</div>';
+  });
+</script>
+</body>
+</html>
