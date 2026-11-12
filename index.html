@@ -11,30 +11,38 @@
   .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,.08); }
   h2 { margin: 0 0 15px; text-align: center; color: #333; }
   h3 { margin: 0 0 10px; font-size: 16px; color: #333; }
-  button { padding: 12px; border: 0; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: #fff; background: #28a745; }
+  button { padding: 12px; border: 0; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: #fff; background: #28a745; transition: 0.2s; }
   button:disabled { background: #bbb; cursor: not-allowed; }
   .full { width: 100%; }
-  .mic { width: 100%; background: #b30000; border-radius: 30px; padding: 16px; font-size: 18px; }
-  .mic.on { background: #ff4d4d; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.03); } 100% { transform: scale(1); } }
-  select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 12px; font-size: 15px; }
-  .line { margin-top: 12px; font-size: 14px; color: #444; text-align: center; word-break: break-word; }
+  
+  .line { margin-top: 15px; font-size: 15px; color: #444; text-align: center; word-break: break-word; min-height: 22px; }
   .line b { color: #b30000; }
+  
+  /* উপরে অডিও প্লেয়ারের ডিজাইন */
+  #mainPlayer { width: 100%; margin-top: 15px; display: none; border-radius: 30px; outline: none; }
+  
   .drop { border: 2px dashed #007bff; padding: 18px; border-radius: 8px; text-align: center; background: #f8f9fa; margin-bottom: 12px; }
   input[type=file] { width: 100%; }
+  
   .bar { height: 8px; background: #e5e5e5; border-radius: 4px; overflow: hidden; margin-top: 12px; display: none; }
   .bar div { height: 100%; width: 0; background: #28a745; transition: width .2s; }
   .status { margin-top: 12px; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; display: none; }
   .ok { display: block; background: #d4edda; color: #155724; }
   .err { display: block; background: #f8d7da; color: #721c24; }
   .load { display: block; background: #fff3cd; color: #856404; }
-  .item { padding: 12px 0; border-bottom: 1px solid #eee; }
+  
+  .item { padding: 12px 5px; border-bottom: 1px solid #eee; transition: background-color 0.5s, border 0.5s; border-radius: 8px; }
   .item:last-child { border-bottom: 0; }
   .item strong { display: block; font-size: 13px; word-break: break-all; }
   .item small { color: #888; }
+  
+  /* অডিও বক্স হাইলাইট (যদিও এখন স্ক্রল হবে না, তবুও ভিজুয়াল ফিডব্যাকের জন্য) */
+  .item.highlight { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+
   .kwrow { display: flex; gap: 6px; margin-top: 8px; }
-  .kwrow input { flex: 1; padding: 9px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; min-width: 0; }
-  .save { background: #6f42c1; padding: 9px 12px; font-size: 14px; }
+  .kwrow input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; min-width: 0; }
+  .kwrow button { padding: 12px 20px; font-size: 16px; }
+  .save { background: #6f42c1; }
   .row { display: flex; gap: 8px; margin-top: 8px; }
   .play { flex: 1; background: #007bff; padding: 8px; font-size: 14px; }
   .del { background: #dc3545; padding: 8px 12px; font-size: 14px; }
@@ -48,22 +56,22 @@
 <body>
 <div class="wrap">
 
+  <!-- টপ কার্ড: শুধু টেক্সট লিখে উপরে অডিও প্লে করার জন্য -->
   <div class="card">
-    <h2>🤖 ভয়েস অ্যাসিস্ট্যান্ট</h2>
-    <select id="langSel">
-      <option value="bn-BD">বাংলা (bn-BD)</option>
-      <option value="en-US">English (en-US)</option>
-    </select>
-    <button class="mic" id="micBtn">🎤 কথা বলুন</button>
-    <div class="line" id="heard">আপনি বলেছেন: —</div>
-    <div class="line" id="botLine">বট: —</div>
-    <div class="line" id="micStatus"></div>
+    <h2>🤖 অডিও প্লেয়ার</h2>
+    <div class="line" id="playStatus">কীওয়ার্ড লিখে প্লে বাটনে চাপুন</div>
+    
     <div class="kwrow" style="margin-top:14px">
-      <input id="testInp" placeholder="মাইক ছাড়া টেস্ট: যেমন আসসালামু আলাইকুম">
-      <button class="save" id="testBtn">টেস্ট</button>
+      <input id="testInp" list="keywordList" placeholder="কীওয়ার্ড লিখুন (যেমন: হ্যালো)">
+      <datalist id="keywordList"></datalist>
+      <button class="save" id="testBtn">প্লে</button>
     </div>
+
+    <!-- অডিও প্লেয়ারটি এখানে দেখা যাবে -->
+    <audio id="mainPlayer" controls></audio>
   </div>
 
+  <!-- অডিও আপলোড কার্ড -->
   <div class="card">
     <h3>⬆️ অডিও আপলোড</h3>
     <div class="drop">
@@ -74,15 +82,15 @@
     <div class="status" id="status"></div>
   </div>
 
+  <!-- সেভ করা অডিওর লিস্ট -->
   <div class="card">
     <h3>সেভ করা অডিও</h3>
-    <p class="hint" style="margin:0 0 8px">প্রতিটা অডিওর নিচের বক্সে লিখুন <b>আপনি কী বললে</b> ওই অডিও বাজবে, তারপর <b>সেভ</b> চাপুন। কমা দিয়ে একাধিক কথা লিখতে পারেন, যেমন: <b>আসসালামু আলাইকুম, সালাম</b>।</p>
+    <p class="hint" style="margin:0 0 8px">প্রতিটা অডিওর নিচের বক্সে লিখুন <b>আপনি কী লিখলে</b> ওই অডিও বাজবে, তারপর <b>সেভ</b> চাপুন।</p>
     <div id="list"><div class="empty">লোড হচ্ছে...</div></div>
   </div>
 </div>
 
 <script>
-  // ⚠️ apiKey আপনার Firebase Config থেকে কপি করে বসান
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "audio-7a8a9.firebaseapp.com",
@@ -100,13 +108,14 @@
   const $ = id => document.getElementById(id);
   const fileInput = $('audioFile'), uploadBtn = $('uploadBtn'), statusEl = $('status');
   const bar = $('bar'), barFill = $('barFill'), listEl = $('list');
-  const micBtn = $('micBtn'), heardEl = $('heard'), botEl = $('botLine'), micStatus = $('micStatus'), langSel = $('langSel');
+  const playStatus = $('playStatus');
+  const mainPlayer = $('mainPlayer');
 
   function show(msg, type) { statusEl.className = 'status ' + type; statusEl.innerHTML = msg; }
   function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function mb(n) { return (n / 1048576).toFixed(2) + ' MB'; }
 
-  /* ---------------- আপলোড (Firestore-এ টুকরা করে) ---------------- */
+  /* ---------------- আপলোড ---------------- */
   async function uploadOne(file, onProgress) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const total = Math.ceil(bytes.length / CHUNK_SIZE);
@@ -150,8 +159,8 @@
     else show(`⚠️ সফল: ${ok}, ব্যর্থ: ${errors.length}<br><small>${errors.join('<br>')}</small>`, 'err');
   });
 
-  /* ---------------- অডিও লোড (টুকরা জোড়া) ---------------- */
-  const urlCache = {};           // id -> Promise<{url,bytes}>
+  /* ---------------- অডিও লোড ---------------- */
+  const urlCache = {}; 
   function loadAudioInfo(id, mime) {
     if (!urlCache[id]) {
       urlCache[id] = db.collection('recordings').doc(id).collection('chunks').orderBy('index').get()
@@ -167,29 +176,40 @@
   }
   function loadAudio(id, mime) { return loadAudioInfo(id, mime).then(i => i.url); }
 
-  /* ---------------- লিস্ট ---------------- */
-  let library = [];              // সব ডকুমেন্ট
+  /* ---------------- লিস্ট এবং ডাটালিস্ট আপডেট ---------------- */
+  let library = []; 
   db.collection('recordings').onSnapshot(snap => {
     library = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     library.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
-    // কিওয়ার্ড লিখতে থাকলে ফোকাস নষ্ট না করতে: ইনপুটে ফোকাস থাকলে রি-রেন্ডার বাদ
+    
+    updateKeywordDatalist();
+
     if (document.activeElement && document.activeElement.classList.contains('kw')) return;
-    if (listEl.querySelector('audio')) return;
+    if (listEl.querySelector('audio.pl')) return; // লিস্টের ভেতরের প্লেয়ার চেক
     render();
   }, err => {
     console.error(err);
     listEl.innerHTML = '<div class="empty">লোড হয়নি: ' + esc(err.code || err.message) + '</div>';
   });
 
+  function updateKeywordDatalist() {
+    const allKw = new Set();
+    library.forEach(d => {
+      String(d.keywords || '').split(/[,،，、;\n|]/).map(x => x.trim()).filter(Boolean).forEach(x => allKw.add(x));
+    });
+    const dl = $('keywordList');
+    dl.innerHTML = Array.from(allKw).map(k => `<option value="${esc(k)}">`).join('');
+  }
+
   function render() {
     if (!library.length) { listEl.innerHTML = '<div class="empty">এখনো কোনো অডিও নেই</div>'; return; }
     listEl.innerHTML = library.map(d => `
-      <div class="item" data-id="${esc(d.id)}" data-mime="${esc(d.mime || 'audio/wav')}">
+      <div class="item" id="item_${esc(d.id)}" data-id="${esc(d.id)}" data-mime="${esc(d.mime || 'audio/wav')}">
         <strong>${esc(d.filename || 'audio')}</strong>
         <small>${d.size ? mb(d.size) : 'পুরনো/ভাঙা এন্ট্রি'}</small>
         ${d.chunkCount ? `
         <div class="kwrow">
-          <input class="kw" placeholder="এই কথা বললে অডিও বাজবে" value="${esc(d.keywords || '')}">
+          <input class="kw" placeholder="এই কথা লিখলে অডিও বাজবে" value="${esc(d.keywords || '')}">
           <button class="save">সেভ</button>
         </div>` : ''}
         <div class="player"></div>
@@ -206,36 +226,28 @@
 
     if (e.target.closest('.save')) {
       const v = item.querySelector('.kw').value.trim();
-      try { await db.collection('recordings').doc(id).update({ keywords: v }); e.target.textContent = '✔'; setTimeout(() => e.target.textContent = 'সেভ', 1200); }
+      try { 
+        await db.collection('recordings').doc(id).update({ keywords: v }); 
+        e.target.textContent = '✔ সেভ হয়েছে'; 
+        setTimeout(() => e.target.textContent = 'সেভ', 1500); 
+      }
       catch (err) { alert('সেভ হয়নি: ' + (err.code || err.message)); }
     }
     if (e.target.closest('.play')) {
       const btn = e.target.closest('.play');
       const holder = item.querySelector('.player');
-      const doc = library.find(x => x.id === id) || {};
       btn.disabled = true; btn.textContent = 'লোড হচ্ছে...';
       holder.innerHTML = '';
       try {
         const info = await loadAudioInfo(id, item.dataset.mime);
         const a = document.createElement('audio');
         a.className = 'pl'; a.controls = true; a.src = info.url;
-        const note = document.createElement('div');
-        note.className = 'hint';
-        note.style.marginTop = '6px';
-        const sizeOk = !doc.size || doc.size === info.bytes;
-        note.textContent = `লোড হয়েছে: ${info.bytes} bytes (টুকরা ${info.chunks}) ` + (sizeOk ? '✔ সাইজ ঠিক' : `❌ আসল সাইজ ${doc.size} — ফাইল অসম্পূর্ণ, আবার আপলোড করুন`);
-        a.onerror = () => {
-          const c = a.error ? a.error.code : '?';
-          note.innerHTML += `<br><span style="color:#dc3545">❌ ব্রাউজার অডিও চালাতে পারেনি (error code ${c}: 3=decode, 4=format সাপোর্ট নেই)</span>`;
-        };
-        a.onloadedmetadata = () => { note.innerHTML += `<br>⏱ দৈর্ঘ্য: ${a.duration.toFixed(1)} সেকেন্ড`; };
-        holder.appendChild(a); holder.appendChild(note);
-        try { await a.play(); } catch (pe) { note.innerHTML += `<br>▶ নিজে প্লে বাটন চাপুন (${pe.name})`; }
+        holder.appendChild(a);
+        try { await a.play(); } catch (pe) { }
         btn.style.display = 'none';
       } catch (err) {
-        console.error(err);
         btn.disabled = false; btn.textContent = '▶ আবার চেষ্টা';
-        holder.innerHTML = `<div class="hint" style="color:#dc3545;margin-top:6px">❌ লোড হয়নি: ${esc(err.code || err.message)}</div>`;
+        holder.innerHTML = `<div class="hint" style="color:#dc3545;margin-top:6px">❌ লোড হয়নি</div>`;
       }
     }
     if (e.target.closest('.del')) {
@@ -244,15 +256,13 @@
       catch (err) { alert('মুছতে পারেনি: ' + (err.code || err.message)); }
     }
   });
+
   listEl.addEventListener('focusout', () => setTimeout(() => {
-    if (!listEl.querySelector('audio') && !(document.activeElement && document.activeElement.classList.contains('kw'))) render();
+    if (!listEl.querySelector('audio.pl') && !(document.activeElement && document.activeElement.classList.contains('kw'))) render();
   }, 200));
 
-  /* ---------------- ভয়েস অ্যাসিস্ট্যান্ট ---------------- */
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const player = new Audio();
+  /* ---------------- অডিও ম্যাচিং এবং টপ প্লেয়ার ---------------- */
   const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-  let recog = null, listening = false, busy = false;
 
   function norm(x) {
     return String(x).normalize('NFC').toLowerCase().replace(/[\s\u200c\u200d.,!?।'"\-]+/g, '');
@@ -267,12 +277,10 @@
     return 2 * hit / (A.length + B.length);
   }
 
-  // প্রতিটা অডিওর বক্সে লেখা কথাগুলো (কমা দিয়ে আলাদা)
   function kwList(d) {
     return String(d.keywords || '').split(/[,،，、;\n|]/).map(x => norm(x)).filter(Boolean);
   }
 
-  // আপনি যা বললেন সেটা কোন অডিওর বক্সের কথার সাথে মেলে
   function findMatch(text) {
     const t = norm(text);
     if (!t) return null;
@@ -281,103 +289,73 @@
       if (!d.chunkCount) continue;
       for (const k of kwList(d)) {
         let sc = 0;
-        if (t.includes(k)) sc = 2 + k.length / 100;                              // আপনার কথায় বক্সের কথা আছে
-        else if (t.length >= 4 && k.includes(t)) sc = 1.5 + t.length / k.length;  // বক্সের লম্বা কথার একটা অংশ বলেছেন
-        else if (k.length >= 4) { const dc = dice(t, k); if (dc >= 0.6) sc = dc; } // প্রায় মিল
+        if (t === k) sc = 10; 
+        else if (t.includes(k)) sc = 5 + k.length / 100;                              
+        else if (t.length >= 4 && k.includes(t)) sc = 3 + t.length / k.length;  
+        else if (k.length >= 4) { const dc = dice(t, k); if (dc >= 0.6) sc = dc; } 
         if (sc > bestScore) { bestScore = sc; best = d; }
       }
     }
     return best;
   }
 
+  // উপরের প্লেয়ারে অডিও চালানোর ফাংশন
   async function reply(d) {
-    busy = true;
-    try { recog.abort(); } catch (e) {}
-    botEl.innerHTML = 'বট: <b>' + esc(d.filename || 'audio') + '</b> বাজছে...';
+    playStatus.innerHTML = `▶️ বাজছে: <b>${esc(d.filename || 'audio')}</b>`;
     try {
       const url = await loadAudio(d.id, d.mime);
-      player.onended = () => { busy = false; botEl.textContent = 'বট: —'; if (listening) startRecog(); };
-      player.onerror = () => { busy = false; micStatus.textContent = '❌ অডিও চালাতে পারেনি (code ' + (player.error ? player.error.code : '?') + ')'; if (listening) startRecog(); };
-      player.src = url;
-      await player.play();
+      
+      // উপরের মেইন প্লেয়ারে সোর্স সেট করা এবং দেখাানো
+      mainPlayer.src = url;
+      mainPlayer.style.display = 'block'; 
+      
+      mainPlayer.onended = () => { playStatus.textContent = 'বাজানো শেষ!'; };
+      mainPlayer.onerror = () => { playStatus.textContent = '❌ অডিও চালাতে পারেনি'; };
+      
+      await mainPlayer.play();
     } catch (e) {
       console.error(e);
-      busy = false;
-      micStatus.textContent = 'অডিও বাজাতে পারেনি: ' + (e.name || e.message);
-      if (listening) startRecog();
+      playStatus.textContent = 'অডিও বাজাতে পারেনি: ' + (e.name || e.message);
     }
   }
 
+  // টেক্সট ম্যাচিং হ্যান্ডেল করার ফাংশন
   function handle(text) {
-    heardEl.textContent = 'আপনি বলেছেন: ' + text;
     const d = findMatch(text);
-    if (!d) botEl.textContent = 'বট: এই কথার জন্য কোনো অডিও সেট করা নেই';
-    else reply(d);
-  }
-
-  function startRecog() {
-    if (!listening || busy) return;
-    recog.lang = langSel.value;
-    try { recog.start(); micStatus.textContent = '🎧 শুনছি... কথা বলুন'; } catch (e) {}
-  }
-
-  if (!SR) {
-    micBtn.disabled = true;
-    micStatus.textContent = 'এই ব্রাউজারে ভয়েস রিকগনিশন নেই। Chrome ব্যবহার করুন।';
-  } else {
-    recog = new SR();
-    recog.continuous = false;
-    recog.interimResults = true;
-    recog.maxAlternatives = 3;
-    recog.onaudiostart = () => { micStatus.textContent = '🎧 মাইক চালু, কথা বলুন'; };
-    recog.onspeechstart = () => { micStatus.textContent = '🗣️ আপনার কথা শুনতে পাচ্ছি...'; };
-    recog.onresult = (ev) => {
-      const r = ev.results[ev.results.length - 1];
-      if (!r.isFinal) { heardEl.textContent = 'আপনি বলছেন: ' + r[0].transcript; return; }
-      // সব অল্টারনেটিভ মিলিয়ে দেখা
-      const alts = Array.from(r).map(a => a.transcript.trim());
-      const hit = alts.find(a => findMatch(a));
-      handle(hit || alts[0]);
-    };
-    recog.onend = () => { if (listening && !busy) setTimeout(startRecog, 250); };
-    recog.onerror = (ev) => {
-      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
-        stopAll(); micStatus.textContent = '❌ মাইক পারমিশন দিন (Chrome → সাইট সেটিংস → মাইক্রোফোন)';
-      } else if (ev.error === 'network') {
-        micStatus.textContent = '⚠️ ইন্টারনেট দরকার (ভয়েস রিকগনিশন)';
-      } else if (ev.error === 'no-speech') {
-        micStatus.textContent = '🤫 কিছু শুনতে পাইনি, আবার বলুন...';
-      } else {
-        micStatus.textContent = '⚠️ ভয়েস এরর: ' + ev.error;
+    
+    if (!d) {
+      playStatus.textContent = '❌ এই কথার জন্য কোনো অডিও সেট করা নেই!';
+    } else {
+      // নিচের লিস্টে হাইলাইট করা (স্ক্রল হবে না)
+      const itemEl = document.getElementById('item_' + d.id);
+      if (itemEl) {
+        itemEl.classList.add('highlight');
+        setTimeout(() => itemEl.classList.remove('highlight'), 2000);
       }
-    };
-
-    micBtn.addEventListener('click', async () => {
-      if (!listening) {
-        listening = true; busy = false;
-        micBtn.classList.add('on'); micBtn.textContent = '⏹️ থামান';
-        // ইউজারের ক্লিকের ভেতরেই অডিও আনলক করা (অটো-প্লের জন্য)
-        try { player.src = SILENT; await player.play(); } catch (e) {}
-        startRecog();
-        // ব্যাকগ্রাউন্ডে কিওয়ার্ড থাকা অডিওগুলো আগে থেকে লোড
-        library.filter(d => d.chunkCount && kwList(d).length).forEach(d => loadAudio(d.id, d.mime).catch(() => {}));
-      } else { stopAll(); }
-    });
+      // উপরে অডিও প্লে করা
+      reply(d);
+    }
   }
 
+  // প্লে বাটন এবং এন্টার কী ইভেন্ট
   $('testBtn').addEventListener('click', async () => {
-    const t = $('testInp').value.trim(); if (!t) return;
-    try { player.src = SILENT; await player.play(); } catch (e) {}
+    const t = $('testInp').value.trim(); 
+    if (!t) return;
+    
+    // ব্রাউজারের অডিও প্লে করার পারমিশন নেওয়া
+    try { 
+      const tempAudio = new Audio(SILENT); 
+      await tempAudio.play(); 
+    } catch (e) {} 
+    
     handle(t);
   });
 
-  function stopAll() {
-    listening = false; busy = false;
-    try { recog.abort(); } catch (e) {}
-    player.pause();
-    micBtn.classList.remove('on'); micBtn.textContent = '🎤 কথা বলুন';
-    micStatus.textContent = '';
-  }
+  $('testInp').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      $('testBtn').click();
+    }
+  });
 </script>
 </body>
 </html>
